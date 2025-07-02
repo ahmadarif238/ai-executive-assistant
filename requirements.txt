@@ -1,0 +1,23 @@
+openai
+langgraph
+langchain
+llama-index
+google-api-python-client
+google-auth
+serpapi
+streamlit  # optional
+langchain_community
+python-dotenv
+sentence-transformers
+llama-index-embeddings-huggingface
+langchain-openai
+llama-index-readers-file
+pymupdf
+google-auth 
+google-auth-oauthlib
+google-api-python-client
+dateparser
+playsound
+speechrecognition
+PyAudio==0.2.14
+pyttsx3
