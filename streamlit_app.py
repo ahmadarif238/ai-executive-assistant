@@ -10,7 +10,7 @@ import speech_recognition as sr
 load_dotenv()
 
 # --- Streamlit Config ---
-st.set_page_config(page_title="AI Executive Assistant", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="AI Executive Agent", page_icon="🤖", layout="wide")
 
 # --- TTS Engine Setup ---
 engine = pyttsx3.init()
@@ -23,7 +23,7 @@ def speak_text(text):
     except Exception as e:
         st.error(f"🔊 Speech Error: {e}")
 
-# --- Voice Input Function ---
+# --- Voice Input ---
 def get_voice_input():
     recognizer = sr.Recognizer()
     mic = sr.Microphone()
@@ -40,20 +40,29 @@ def get_voice_input():
     except Exception as e:
         return f"🎤 Microphone error: {e}"
 
-# --- Helper: Clean Response ---
+# --- Clean Output Helpers ---
 def clean_markdown(text):
     return text.replace("*", "").replace("```", "").replace("\\n", "\n").replace("\\", "").strip()
 
 def clean_for_speech(text):
     return text.replace("*", "").replace("```", "").replace("\\n", ". ").replace("\\", "").replace("\n", ". ").strip()
 
+# --- Dummy Email Sender (Replace with real logic) ---
+def send_email_function(result):
+    # Replace with your actual email sending code
+    st.info("📤 Simulated email send...")
+    return True
+
+def parse_and_send_edited_email(text):
+    # Example: parse subject, recipient, body from text and send
+    st.info("📤 Simulated sending edited email...")
+    return True
+
 # --- Sidebar Settings ---
 with st.sidebar:
     st.title("⚙️ Settings")
     voice_input_enabled = st.session_state.get("voice_enabled", False)
-    voice_input_toggle = st.button("🎙️ Toggle Voice Assistant", key="voice_toggle")
-
-    if voice_input_toggle:
+    if st.button("🎙️ Toggle Voice Assistant", key="voice_toggle"):
         voice_input_enabled = not voice_input_enabled
         st.session_state.voice_enabled = voice_input_enabled
 
@@ -71,14 +80,14 @@ with st.sidebar:
 - 🧠 **Ask Any General Query**
 """)
 
-# --- App Title & Header ---
-st.title("🤖 Voice-Enabled AI Executive Assistant")
+# --- App Title ---
+st.title("🤖 Voice-Enabled AI Executive Agent")
 st.markdown("Use text or voice to access all your tools from one place.")
 
 # --- Input Section ---
 st.markdown("## 💬 Input Panel")
-
 task = ""
+
 if voice_input_enabled:
     if st.button("🎙️ Speak Now"):
         task = get_voice_input()
@@ -96,8 +105,7 @@ if task:
             st.error(f"❌ Agent Error: {e}")
             st.stop()
 
-    # Clean response
-    # --- Clean and Normalize Agent Response ---
+    # --- Clean and Display Output ---
     if isinstance(result, dict) and "content" in result:
         raw_response = result["content"]
     else:
@@ -106,19 +114,51 @@ if task:
     clean_display = clean_markdown(raw_response)
     clean_speak = clean_for_speech(raw_response)
 
-
-    # --- Display Result ---
     st.markdown("## ✅ Assistant's Response")
     st.markdown(f"#### 🧠 Output\n\n{clean_display}")
 
     if auto_speak_enabled and clean_speak:
         speak_text(clean_speak)
 
-    # --- Optional Debug View ---
+    # --- Email Confirmation Logic ---
+    if "To:" in clean_display and "Subject:" in clean_display and "Body:" in clean_display:
+        st.markdown("### ✉️ Do you want to send this email?")
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("✅ Send Email"):
+                try:
+                    send_result = send_email_function(result)
+                    st.success("📤 Email sent successfully!")
+                    if auto_speak_enabled:
+                        speak_text("Your email has been sent.")
+                except Exception as e:
+                    st.error(f"Failed to send email: {e}")
+
+        with col2:
+            if st.button("📝 Edit Email"):
+                st.session_state.draft_email = clean_display
+                st.text_area("✏️ Edit your email before sending:", value=st.session_state.draft_email, key="edited_email")
+
+                if st.button("📨 Send Edited Email"):
+                    try:
+                        send_result = parse_and_send_edited_email(st.session_state.edited_email)
+                        st.success("📤 Edited email sent!")
+                        if auto_speak_enabled:
+                            speak_text("Your edited email has been sent.")
+                    except Exception as e:
+                        st.error(f"Failed to send edited email: {e}")
+
+        with col3:
+            if st.button("❌ Cancel Email"):
+                st.info("Email sending canceled.")
+                if auto_speak_enabled:
+                    speak_text("Email sending canceled.")
+
+    # --- Optional Debug Info ---
     with st.expander("🧪 View Raw Agent Output"):
         st.write(result)
 
 # --- Footer ---
 st.markdown("---")
-st.caption("🚀 Built by Arif Ahmad Khan | Powered by Python, Streamlit, LLM, Gmail & Calendar APIs")
-
+st.caption("🚀 Built with ❤️ by Arif Ahmad Khan")
